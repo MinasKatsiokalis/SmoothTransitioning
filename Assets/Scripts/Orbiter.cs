@@ -45,6 +45,16 @@ namespace MK.Transitioning
             orbiter = new GameObject("OrbiterPosition").transform;
             StartOrbit();
         }
+
+        private void OnDisable()
+        {
+            StopOrbit();
+        }
+
+        private void OnDestroy()
+        {
+            StopOrbit();
+        }
         #endregion
 
         #region Public Methods
@@ -61,11 +71,24 @@ namespace MK.Transitioning
         /// Stop orbiting around target
         /// </summary>
         public void StopOrbit()
-        {   
-            if(orbitCoroutine != null)
-                StopCoroutine(orbitCoroutine);
+        {
+            if (orbitCoroutine == null)
+                return;
 
-            Destroy(orbiter.gameObject);
+            StopCoroutine(orbitCoroutine);
+            try
+            {
+                Destroy(orbiter.gameObject);
+            }
+            catch
+            {
+                Debug.LogWarning("Orbiter object already destroyed");
+            }
+            finally
+            {
+                orbitCoroutine = null;
+                Debug.Log($"Stopping Orbit {gameObject.name}");
+            }
         }
         #endregion
 
@@ -79,12 +102,13 @@ namespace MK.Transitioning
             orbiter.position = transform.position;
             orbiter.SetParent(_orbitPoint);
 
-            while (true)
+            while (orbiter != null)
             {
                 orbiter.transform.RotateAround(_orbitPoint.position, _orbitPoint.up, _speed * Time.deltaTime);
                 this.transform.position = orbiter.position;
                 yield return null;
             }
+            Debug.Log($"Stopping Orbit {gameObject.name}");
         }
         #endregion
     }

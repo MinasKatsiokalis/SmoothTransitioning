@@ -1,6 +1,8 @@
 using UnityEngine;
 using MK.Transitioning.Utils;
 using MK.Transitioning.Interfaces;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace MK.Transitioning
 {   
@@ -10,32 +12,40 @@ namespace MK.Transitioning
     /// </summary>
     public class SceneOneManager : AbstractSceneManager
     {
-        [SerializeField]
-        private TextFader _textFader;
-
-        private void OnEnable()
-        {
-            OnSceneLoaded();
-        }
-
+        #region Unity Methods
         private void Start()
         {
-            _textFader.FadeIn();
+            FadeInObjects();
+            CountDownToTransition(5);
         }
 
-        private void OnDisable()
-        {
+        private new void OnDisable()
+        {   
             SceneTransition();
-            OnSceneUnloaded();
+            base.OnDisable();
         }
+        #endregion
 
+        #region Private Methods
+        /// <summary>
+        /// Executes when the scene is about to transition.
+        /// </summary>
         private async void SceneTransition()
         {   
-            var parent = Utilities.GetTopParent(_textFader.Transform);
-            DontDestroyOnLoad(parent);
-
-            await _textFader.FadeOutAwaitable();
-            Destroy(parent.gameObject);
+            DontDestroyOnLoad(ObjectsContainer);
+            await FadeOutObjects();
+            Destroy(ObjectsContainer);
         }
+
+        /// <summary>
+        /// Counts down to trigger the transition to the next scene.
+        /// </summary>
+        /// <param name="seconds"></param>
+        private async void CountDownToTransition(int seconds)
+        {
+            await Task.Delay(seconds * 1000);
+            EventSystem.SceneEvents.OnTransitionTriggered?.Invoke(this.Scene);
+        }
+        #endregion
     }
 }

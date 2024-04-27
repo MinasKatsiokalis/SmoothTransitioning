@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,6 +11,7 @@ namespace MK.Transitioning
             public static Action<Scene> OnSceneLoaded;
             public static Action<Scene> OnSceneUnloaded;
             public static Action<Scene> OnTransitionTriggered;
+            public static Action<GameObject[]> OnObjectsTransfered;
         }
 
         public static class TimelineEvents
@@ -20,6 +19,12 @@ namespace MK.Transitioning
             public static Action OnSceneOneSelected;
             public static Action OnSceneTwoSelected;
             public static Action OnSceneThreeSelected;
+        }
+
+        public static class SelectionEvents
+        {
+            public static Action<GameObject> OnObjectSelected;
+            public static Action<GameObject[]> OnObjectsSelected;
         }
     }
 }

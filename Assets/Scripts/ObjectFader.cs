@@ -1,9 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MK.Transitioning.Interfaces;
-using System.Linq;
+using System;
+using MK.Transitioning.Utils;
 
 namespace MK.Transitioning
 {
@@ -35,6 +36,10 @@ namespace MK.Transitioning
 
         //Materials to fade
         private Material[] materials = null;
+
+        //Task management
+        private Task fadeTask = null;
+        private CancellationTokenSource cancellationTokenSource = null;
         #endregion
 
         #region Unity Methods
@@ -42,23 +47,77 @@ namespace MK.Transitioning
         {
             materials = GetComponentsInChildren<Renderer>().Select(renderer => renderer.material).ToArray();
         }
+        private void OnDisable()
+        {
+            if (fadeTask != null && !fadeTask.IsCompleted)
+            {
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+            }
+        }
+        private void OnDestroy()
+        {
+            if (fadeTask != null && !fadeTask.IsCompleted)
+            {
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+            }
+        }
         #endregion
 
         #region Public Methods
         /// <summary>
-        /// Fades in the text.
+        /// Fades in the object (Async).
         /// </summary>
-        public async void FadeIn() => await FadeTask(_targetAlpha);
-        public async Task FadeInAwaitable() => await FadeTask(_targetAlpha);
+        public async void FadeIn() => await Fade(_targetAlpha);
 
         /// <summary>
-        /// Fades out the text. 
+        /// Fades in the object (Async/Awaitable).
         /// </summary>
-        public async void FadeOut() => await FadeTask(0f);
-        public async Task FadeOutAwaitable() => await FadeTask(0f);
+        /// <returns>Task</returns>
+        public async Task FadeInAwaitable() => await Fade(_targetAlpha);
+
+        /// <summary>
+        /// Fades out the object (Async). 
+        /// </summary>
+        public async void FadeOut() => await Fade(0f);
+
+        /// <summary>
+        /// Fades out the object (Async/Awaitable).
+        /// </summary>
+        /// <returns>Task</returns>
+        public async Task FadeOutAwaitable() => await Fade(0f);
         #endregion
 
         #region Private Methods
+        /// <summary>
+        /// Manages FadeTask operations and handles cancellation.
+        /// </summary>
+        /// <param name="targetAlpha"></param>
+        /// <returns></returns>
+        private async Task Fade(float targetAlpha)
+        {
+            // If a fade task is running, cancel it
+            if (fadeTask != null && !fadeTask.IsCompleted)
+            {
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+            }
+
+            // Create a new CancellationTokenSource
+            cancellationTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                await (fadeTask = FadeTask(targetAlpha, cancellationTokenSource.Token));
+            }
+            catch (TaskCanceledException)
+            {
+                Debug.Log("Fade cancelled");
+                SetAlpha(targetAlpha);
+            }
+        }
+
         /// <summary>
         /// Coroutine that fades in or out the text smoothly.
         /// </summary>
@@ -66,23 +125,44 @@ namespace MK.Transitioning
         /// <param name="targetTextAlpha"></param>
         /// <param name="targetBackgroundAlpha"></param>
         /// <returns></returns>
-        private async Task FadeTask(float targetAlpha)
+        private async Task FadeTask(float targetAlpha, CancellationToken token)
         {
             if (materials == null || materials.Length == 0)
                 return;
 
+            Action<Material, SurfaceType> changeSurfaceType = (material, surfaceType) => Utilities.ChnageSurfaceType(material, surfaceType);
             Color color = materials[0].color;
             float alphaDiff = Mathf.Abs(color.a - targetAlpha);
 
             while (alphaDiff > 0f)
             {
+                if (token.IsCancellationRequested)
+                    throw new TaskCanceledException();
+
                 float newAlpha = Mathf.MoveTowards(materials[0].color.a, targetAlpha, Time.deltaTime / Duration);
                 foreach (var material in materials)
+                {
                     material.color = new Color(color.r, color.g, color.b, newAlpha);
+                    if (newAlpha >= 0.95f)
+                        changeSurfaceType(material, SurfaceType.Opaque);
+                    else
+                        changeSurfaceType(material, SurfaceType.Transparent);
+                }
                 alphaDiff = Mathf.Abs(materials[0].color.a - targetAlpha);
                 
                 await Task.Yield();
             }
+        }
+
+        /// <summary>
+        /// Sets an <paramref name="alpha"/> value to all object materials.
+        /// </summary>
+        /// <param name="alpha"></param>
+        private void SetAlpha(float alpha)
+        {
+            foreach (var material in materials)
+                material.color = new Color(material.color.r, material.color.g, material.color.b, alpha);
+            cancellationTokenSource.Dispose();
         }
         #endregion
     }

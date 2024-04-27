@@ -1,26 +1,27 @@
 using MK.Transitioning.Interfaces;
-using System.Collections;
+using MK.Transitioning.Utils;
 using System.Collections.Generic;
-using System.Linq;
-using TMPro;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace MK.Transitioning
 {
+    /// <summary>
+    /// Scene manager for Scene2.
+    /// Responsible for communicate with external resources and transfer event triggers.
+    /// </summary>
     public class SceneTwoManager : AbstractSceneManager
     {
-        [SerializeField]
-        private GameObject objectsContainer;
-        [SerializeField]
+        //Selected object to be moved to the next scene
         private GameObject selectedObject;
 
-        private void OnEnable()
-        {
-            SelectionManager.OnObjectSelected += SceneTransition;
-            EventSystem.SceneEvents.OnSceneLoaded += MoveObject;
-
-            OnSceneLoaded();
+        #region Unity Methods
+        private new void OnEnable()
+        {   
+            EventSystem.SelectionEvents.OnObjectSelected += SetSelectedObject;
+            EventSystem.SceneEvents.OnSceneLoaded += TransferObject;
+            base.OnEnable();
         }
 
         private void Start()
@@ -28,61 +29,51 @@ namespace MK.Transitioning
             FadeInObjects();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
-            foreach (Transform child in objectsContainer.transform)
-                if(child != selectedObject.transform)
-                    Destroy(child.gameObject);
-
-            SelectionManager.OnObjectSelected -= SceneTransition;
-            EventSystem.SceneEvents.OnSceneLoaded -= MoveObject;
-
-            OnSceneUnloaded();
+            SceneTransition();
+            EventSystem.SelectionEvents.OnObjectSelected -= SetSelectedObject;
+            EventSystem.SceneEvents.OnSceneLoaded -= TransferObject;
+            base.OnDisable();
         }
+        #endregion
 
-        private void FadeInObjects()
-        {
-            var fadables = objectsContainer.GetComponentsInChildren<IFadable>();
-            if (fadables.Length <= 0)
-                return;
-
-            foreach (var fadable in fadables)
-                fadable.FadeIn();
-        }
-
-        private void FadeOutObjects()
-        {
-            var fadables = objectsContainer.GetComponentsInChildren<IFadable>();
-            if (fadables.Length <= 0)
-                return;
-
-            foreach (var fadable in fadables)
-            {
-                if(fadable.Transform == selectedObject.transform)
-                    continue;
-
-                fadable.FadeOut();
-            }
-        }
-
-        private void SceneTransition(GameObject selectedObject)
+        #region Private Methods
+        /// <summary>
+        /// Sets the selected object.
+        /// Triggers the scene transition process.
+        /// </summary>
+        /// <param name="selectedObject"></param>
+        private void SetSelectedObject(GameObject selectedObject)
         {
             this.selectedObject = selectedObject;
-
-            FadeOutObjects();
-            this.selectedObject.transform.SetParent(null);
-            selectedObject.GetComponent<IOrbitable>().StopOrbit();
-            //DontDestroyOnLoad(this.selectedObject);
-            EventSystem.SceneEvents.OnTransitionTriggered?.Invoke(gameObject.scene);
+            EventSystem.SceneEvents.OnTransitionTriggered?.Invoke(this.Scene);
         }
 
-        private void MoveObject(Scene scene)
+        /// <summary>
+        /// Moves the selected object to the new scene.
+        /// </summary>
+        /// <param name="scene"></param>
+        private void TransferObject(Scene scene)
         {
             if (scene.buildIndex != 3)
                 return;
 
+            selectedObject.transform.SetParent(null);
             SceneManager.MoveGameObjectToScene(selectedObject, scene);
-            selectedObject.transform.position = Vector3.Lerp(transform.position, new Vector3(0,0,3.5f), Time.deltaTime * 0.01f);
+            Utilities.MoveToCenter(selectedObject.transform, 1.5f, 3.5f);
+            EventSystem.SceneEvents.OnObjectsTransfered?.Invoke(new GameObject[] { selectedObject });
         }
+
+        /// <summary>
+        /// Executes when the scene is about to transition.
+        /// </summary>
+        private async void SceneTransition()
+        {   
+            DontDestroyOnLoad(ObjectsContainer);
+            await FadeOutObjects();
+            Destroy(ObjectsContainer);
+        }
+        #endregion
     }
 }

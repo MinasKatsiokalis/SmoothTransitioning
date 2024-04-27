@@ -5,15 +5,24 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace MK.Transitioning
-{
+{   
+    /// <summary>
+    /// Is resposible for selecting objects in any scene.
+    /// </summary>
     public class SelectionManager : MonoBehaviour
     {   
+        //Only one instance of SelectionManager is allowed.
         public static SelectionManager Instance { get; private set; }
 
-        public static event Action<GameObject> OnObjectSelected;
-
+        //Is the SelectionManager enabled?
         private bool isEnabled;
+        public bool IsEnabled
+        {
+            set => isEnabled = value;
+            get => isEnabled;
+        }
 
+        #region Unity Methods
         private void Awake()
         {
             if (Instance == null)
@@ -40,12 +49,19 @@ namespace MK.Transitioning
 
                 if (Physics.Raycast(ray, out hit))
                 {
-                    Debug.Log("Selected object: " + hit.transform.gameObject.name);
-                    OnObjectSelected?.Invoke(hit.transform.gameObject);
+                    Debug.Log($"Selected: {hit.transform.gameObject.name}");
+                    EventSystem.SelectionEvents.OnObjectSelected?.Invoke(hit.transform.gameObject);
                 }
             }
         }
+        #endregion
 
-        private void EnableBehaviour(Scene scene) => isEnabled = (scene.buildIndex == 2) ? true : false;
+        #region Private Methods
+        /// <summary>
+        /// Enables the SelectionManager if the scene is the second scene.
+        /// </summary>
+        /// <param name="scene"></param>
+        private void EnableBehaviour(Scene scene) => isEnabled = (scene.buildIndex == 2 || scene.buildIndex == 3) ? true : false;
+        #endregion
     }
 }
