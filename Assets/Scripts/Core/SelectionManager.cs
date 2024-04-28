@@ -29,13 +29,12 @@ namespace MK.Transitioning.Core
 
         private void OnEnable()
         {
-            if (InputManager.Instance == null)
-            {
-                Debug.LogError("InputManager is missing.");
-                Destroy(gameObject);
-            }
-
             InputManager.OnLeftClick += OnClick;
+        }
+
+        private void OnDisable()
+        {
+            InputManager.OnLeftClick -= OnClick;
         }
 
         private void Start()

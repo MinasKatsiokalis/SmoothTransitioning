@@ -29,12 +29,6 @@ namespace MK.Transitioning.Core
         #region Unity Methods
         private void OnEnable()
         {
-            if (InputManager.Instance == null)
-            {
-                Debug.LogError("InputManager is missing.");
-                Destroy(gameObject);
-            }
-
             InputManager.OnRightClickDragStarted += DragPerformed;
             InputManager.OnScroll += Zooming;
         }
