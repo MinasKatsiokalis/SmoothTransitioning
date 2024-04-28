@@ -21,6 +21,7 @@ namespace MK.Transitioning.Components
         {
             Debug.Log($"{Scene.name} Loaded");
             EventSystem.SceneEvents.OnSceneLoaded?.Invoke(Scene);
+            DontDestroyOnLoad(ObjectsContainer);
         }
 
         public void OnDisable()
@@ -33,11 +34,12 @@ namespace MK.Transitioning.Components
         /// Fade in all objects in the container.
         /// </summary>
         public void FadeInObjects()
-        {
+        {   
+
             var fadables = ObjectsContainer.GetComponentsInChildren<IFadable>();
             if (fadables.Length <= 0)
                 return;
-
+            Debug.Log($"Fading In {Scene.name}");
             foreach (var fadable in fadables)
                 fadable.FadeIn();
         }
@@ -46,12 +48,14 @@ namespace MK.Transitioning.Components
         /// Fade out all objects in the container except the selected object.
         /// </summary>
         public async Task FadeOutObjects()
-        {
+        {   
+            Debug.Log($"Fading Check {Scene.name}");
             var fadables = ObjectsContainer.GetComponentsInChildren<IFadable>();
             if (fadables.Length <= 0)
                 return;
 
-            List<Task> tasks = new List<Task>(fadables.Length - 1);
+            Debug.Log($"Fading Out {Scene.name}");
+            List<Task> tasks = new List<Task>(fadables.Length);
             foreach (var fadable in fadables)
                 tasks.Add(fadable.FadeOutAwaitable());
             await Task.WhenAll(tasks);
@@ -64,9 +68,10 @@ namespace MK.Transitioning.Components
         public async void SceneTransition()
         {
             if (ObjectsContainer == null)
+            {
+                Debug.Log($"CONTAINER = NULL IN {Scene.name}");
                 return;
-
-            DontDestroyOnLoad(ObjectsContainer);
+            }
             await FadeOutObjects();
             Destroy(ObjectsContainer);
         }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using MK.Transitioning.Core;
+using MK.Transitioning.Utils;
 
 namespace MK.Transitioning.Components
 {
@@ -21,7 +22,7 @@ namespace MK.Transitioning.Components
         }
         void Start()
         {
-            restartButton.onClick.AddListener(() => EventSystem.TimelineEvents.OnSceneOneSelected());
+            restartButton.onClick.AddListener(() => EventSystem.SceneEvents.OnTransitionTriggered?.Invoke(Scene));
             FadeInObjects();
         }
 
@@ -41,8 +42,8 @@ namespace MK.Transitioning.Components
         private void ObtainTransferedObjects(GameObject[] objects)
         {
             Debug.Log("Objects Transfered");
-            foreach (var obj in objects)
-                obj.transform.SetParent(ObjectsContainer.transform);
+            objects[0].transform.SetParent(ObjectsContainer.transform);
+            Utilities.MoveToCenter(objects[0].transform, 5f, 3.5f);
         }
         #endregion
     }

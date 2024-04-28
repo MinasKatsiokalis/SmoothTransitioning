@@ -52,7 +52,7 @@ namespace MK.Transitioning.Core
             CurrentState = newState;
             
             AsyncOperation operation = SceneManager.LoadSceneAsync((int)CurrentState, LoadSceneMode.Additive);
-            operation.allowSceneActivation = true;
+            //operation.allowSceneActivation = true;
             operation.completed += _ => UnloadPreviousScene();
         }
 
@@ -67,24 +67,19 @@ namespace MK.Transitioning.Core
                     {
                         if (SceneManager.GetSceneByBuildIndex((int)State.Scene3).isLoaded)
                             SceneManager.UnloadSceneAsync((int)State.Scene3);
-                        Debug.Log($"Unloading Previous Scene: {(int)State.Scene3}");
                     }
                     break;
                 case State.Scene2:
                     {
                         if (SceneManager.GetSceneByBuildIndex((int)State.Scene1).isLoaded)
                             SceneManager.UnloadSceneAsync((int)State.Scene1);
-                        Debug.Log($"Unloading Previous Scene: {(int)State.Scene1}");
                     }
                     break;
                 case State.Scene3:
                     {
                         if (SceneManager.GetSceneByBuildIndex((int)State.Scene2).isLoaded)
                             SceneManager.UnloadSceneAsync((int)State.Scene2);
-                        Debug.Log($"Unloading Previous Scene: {(int)State.Scene2}");
                     }
-                    break;
-                default:
                     break;
             }
         }

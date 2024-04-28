@@ -47,13 +47,8 @@ namespace MK.Transitioning.Components
         }
 
         private void OnDisable()
-        {
-            StopOrbit();
-        }
-
-        private void OnDestroy()
-        {
-            StopOrbit();
+        {   
+                StopOrbit();
         }
         #endregion
 
@@ -76,19 +71,8 @@ namespace MK.Transitioning.Components
                 return;
 
             StopCoroutine(orbitCoroutine);
-            try
-            {
-                Destroy(orbiter.gameObject);
-            }
-            catch
-            {
-                Debug.LogWarning("Orbiter object already destroyed");
-            }
-            finally
-            {
-                orbitCoroutine = null;
-                Debug.Log($"Stopping Orbit {gameObject.name}");
-            }
+            Destroy(orbiter.gameObject);
+            orbitCoroutine = null;
         }
         #endregion
 
@@ -108,7 +92,7 @@ namespace MK.Transitioning.Components
                 this.transform.position = orbiter.position;
                 yield return null;
             }
-            Debug.Log($"Stopping Orbit {gameObject.name}");
+            orbitCoroutine = null;
         }
         #endregion
     }

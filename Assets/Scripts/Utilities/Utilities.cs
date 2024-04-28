@@ -32,13 +32,14 @@ namespace MK.Transitioning.Utils
             Vector3 targetPosition = camera.position + camera.forward * distance;
             float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
-            while (distanceToTarget > 0.001)
+            while (distanceToTarget > 0.01)
             {
                 transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * speed);
                 distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
                 await Task.Yield();
             }
+            Debug.Log("MoveToCenter Completed");
         }
     }
 }

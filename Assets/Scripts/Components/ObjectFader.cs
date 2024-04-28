@@ -35,7 +35,7 @@ namespace MK.Transitioning.Components
             get => _duration;
             set => _duration = value;
         }
-
+        private Renderer[] renderers = null;
         //Materials to fade
         private Material[] materials = null;
         //Task management
@@ -45,15 +45,16 @@ namespace MK.Transitioning.Components
 
         #region Unity Methods
         private void Start()
-        {
-            materials = GetComponentsInChildren<Renderer>().Select(renderer => renderer.material).ToArray();
+        {   
+            renderers = GetComponentsInChildren<Renderer>();
+            materials = renderers.Select(renderer => renderer.material).ToArray();
         }
 
         private void OnDisable()
         {
             if (fadeTask != null && !fadeTask.IsCompleted)
-            {       
-                Debug.Log("Disable");
+            {
+                Debug.Log("Cancel from Disable");
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource.Dispose();
             }
@@ -64,24 +65,44 @@ namespace MK.Transitioning.Components
         /// <summary>
         /// Fades in the object (Async).
         /// </summary>
-        public async void FadeIn() => await Fade(_targetAlpha);
+        public async void FadeIn() 
+        {
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].enabled = true;
+            await Fade(_targetAlpha);
+        } 
 
         /// <summary>
         /// Fades in the object (Async/Awaitable).
         /// </summary>
         /// <returns>Task</returns>
-        public async Task FadeInAwaitable() => await Fade(_targetAlpha);
+        public async Task FadeInAwaitable() 
+        {
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].enabled = true;
+            await Fade(_targetAlpha);
+        } 
 
         /// <summary>
         /// Fades out the object (Async). 
         /// </summary>
-        public async void FadeOut() => await Fade(0f);
+        public async void FadeOut() 
+        {
+            await Fade(0f);
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].enabled = false;
+        }
 
         /// <summary>
         /// Fades out the object (Async/Awaitable).
         /// </summary>
         /// <returns>Task</returns>
-        public async Task FadeOutAwaitable() => await Fade(0f);
+        public async Task FadeOutAwaitable() 
+        {
+            await Fade(0f);
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].enabled = false;
+        } 
         #endregion
 
         #region Private Methods
@@ -94,7 +115,8 @@ namespace MK.Transitioning.Components
         {
             // If a fade task is running, cancel it
             if (fadeTask != null && !fadeTask.IsCompleted)
-            {
+            {   
+                Debug.Log("Cancel from Another Task");
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource.Dispose();
             }
@@ -103,16 +125,15 @@ namespace MK.Transitioning.Components
             cancellationTokenSource = new CancellationTokenSource();
             try
             {
+                Debug.Log($"Fade Task Started {transform.name}");
                 await (fadeTask = FadeTask(targetAlpha, cancellationTokenSource.Token));
             }
             catch (TaskCanceledException)
             {
-                Debug.Log("Fade cancelled");
-                if(materials == null || cancellationTokenSource.IsCancellationRequested)
+                if(materials == null)
                     return;
 
                 SetAlpha(targetAlpha);
-                cancellationTokenSource.Dispose();
             }
             catch (Exception e)
             {
@@ -135,7 +156,7 @@ namespace MK.Transitioning.Components
             Color color = materials[0].color;
             float alphaDiff = Mathf.Abs(color.a - targetAlpha);
 
-            while (alphaDiff > 0f)
+            while (alphaDiff > 0.05f)
             {
                 if (token.IsCancellationRequested)
                     throw new TaskCanceledException();
@@ -154,7 +175,8 @@ namespace MK.Transitioning.Components
         /// </summary>
         /// <param name="alpha"></param>
         private void SetAlpha(float alpha)
-        {
+        {   
+            Debug.Log($"Setting Alpha {transform.name}");
             foreach (var material in materials)
                 material.color = new Color(material.color.r, material.color.g, material.color.b, alpha);
         }

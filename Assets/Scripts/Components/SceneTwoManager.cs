@@ -46,7 +46,7 @@ namespace MK.Transitioning.Components
         private void SetSelectedObject(GameObject selectedObject)
         {
             this.selectedObject = selectedObject;
-            EventSystem.SceneEvents.OnTransitionTriggered?.Invoke(this.Scene);
+            EventSystem.SceneEvents.OnTransitionTriggered?.Invoke(Scene);
         }
 
         /// <summary>
@@ -60,7 +60,6 @@ namespace MK.Transitioning.Components
 
             selectedObject.transform.SetParent(null);
             SceneManager.MoveGameObjectToScene(selectedObject, scene);
-            Utilities.MoveToCenter(selectedObject.transform, 2f, 3.5f);
             EventSystem.SceneEvents.OnObjectsTransfered?.Invoke(new GameObject[] { selectedObject });
         }
         #endregion

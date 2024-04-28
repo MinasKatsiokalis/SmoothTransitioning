@@ -12,8 +12,6 @@ namespace MK.Transitioning.Components
     /// <summary>
     /// Behaviour class that fades in and out a text component.
     /// </summary>
-    [RequireComponent(typeof(Image))]
-    [RequireComponent(typeof(TMP_Text))]
     public class TextFader : MonoBehaviour, IFadable
     {
         #region Properties
@@ -131,12 +129,10 @@ namespace MK.Transitioning.Components
             }
             catch (TaskCanceledException)
             {
-                Debug.Log("Fade cancelled");
-                if (_textComponent == null || _backgroundImage == null || cancellationTokenSource.IsCancellationRequested)
+                if (_textComponent == null || _backgroundImage == null)
                     return;
 
                 SetAlpha(targetTextAlpha, targetBackgroundAlpha);
-                cancellationTokenSource.Dispose();
             }
             catch (Exception e)
             {
@@ -156,19 +152,19 @@ namespace MK.Transitioning.Components
             float textAlphaDiff = Math.Abs(_textComponent.color.a - targetTextAlpha);
             float backgroundAlphaDiff = Math.Abs(_backgroundImage.color.a - targetBackgroundAlpha);
 
-            while (textAlphaDiff > 0f || backgroundAlphaDiff > 0f)
+            while (textAlphaDiff > 0.05f || backgroundAlphaDiff > 0.05f)
             {
                 if (token.IsCancellationRequested)
                     throw new TaskCanceledException();
 
-                if (textAlphaDiff > 0f)
+                if (textAlphaDiff > 0.05f)
                 {
                     float newAlpha = Mathf.MoveTowards(_textComponent.color.a, targetTextAlpha, Time.deltaTime / Duration);
                     _textComponent.color = new Color(_textComponent.color.r, _textComponent.color.g, _textComponent.color.b, newAlpha);
                     textAlphaDiff = Math.Abs(_textComponent.color.a - targetTextAlpha);
                 }
 
-                if (backgroundAlphaDiff > 0f)
+                if (backgroundAlphaDiff > 0.05f)
                 {
                     float newAlpha = Mathf.MoveTowards(_backgroundImage.color.a, targetBackgroundAlpha, Time.deltaTime / Duration);
                     _backgroundImage.color = new Color(_backgroundImage.color.r, _backgroundImage.color.g, _backgroundImage.color.b, newAlpha);
