@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Interfaces
 {
     public interface IRotatable
     {

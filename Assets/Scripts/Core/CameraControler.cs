@@ -29,22 +29,31 @@ namespace MK.Transitioning.Core
         #region Unity Methods
         private void OnEnable()
         {
-            InputManager.OnRightClickDrag += OnClick;
+            if (InputManager.Instance == null)
+            {
+                Debug.LogError("InputManager is missing.");
+                Destroy(gameObject);
+            }
+
+            InputManager.OnRightClickDragStarted += DragPerformed;
             InputManager.OnScroll += Zooming;
         }
 
         private void OnDisable()
         {
-            InputManager.OnRightClickDrag -= OnClick;
+            InputManager.OnRightClickDragStarted -= DragPerformed;
             InputManager.OnScroll -= Zooming;
         }
 
         void Start()
         {
             mainCamera = GetComponent<Camera>();
-
             if (target == null)
                 Debug.LogError("CameraControler: No target set for the camera to rotate around.");
+
+            enabled = (InputManager.Instance != null);
+            if (!enabled)
+                Debug.LogError("InputManager is missing.");
         }
         #endregion
 
@@ -65,14 +74,14 @@ namespace MK.Transitioning.Core
         /// <summary>
         /// Rotates the camera around the target based on the mouse movement.
         /// </summary>
-        private void OnClick(Vector2 mouseDelta)
+        private void DragPerformed(Vector2 mouseDelta)
         {
             float horizontal = mouseDelta.x * rotateSpeed * Time.deltaTime;
             float vertical = mouseDelta.y * rotateSpeed * Time.deltaTime;
 
             // Calculate the new position
             transform.RotateAround(target.position, Vector3.up, horizontal);
-            transform.RotateAround(target.position, transform.right, -vertical);
+            transform.RotateAround(target.position, Vector3.right, -vertical);
 
             // Ensure the camera is always looking at the target
             transform.LookAt(target);

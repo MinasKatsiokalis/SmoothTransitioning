@@ -7,26 +7,46 @@ namespace MK.Transitioning.Core
     public class InputManager : MonoBehaviour
     {
         #region Properties
+        //Only one instance of InputManager is allowed.
         public static InputManager Instance { get; private set; }
 
+        #region Input Events
+        //Fat left-mouse click
         public static event Action<Vector2> OnLeftClick;
-        public static event Action<Vector2> OnLeftClickDrag;
-        public static event Action<Vector2> OnRightClickDrag;
+        //Left-mouse drag
+        public static event Action<Vector2> OnLeftClickDragStarted;
+        public static event Action OnLeftClickDragStopped;
+        //Right-mouse drag
+        public static event Action<Vector2> OnRightClickDragStarted;
+        public static event Action OnRightClickDragStopped;
+        //Wheel scroll
         public static event Action<Vector2> OnScroll;
+        //Mouse position
         public static event Action<Vector2> OnMousePositionChanged;
-        
-        private InputActions.MouseInputActions mouseInputActions;
+        #endregion
 
+        #region Public
+        private static InputActions.MouseInputActions mouseInputActions;
+        public static InputActions.MouseInputActions MouseInputActions => mouseInputActions;
+
+        private static Vector2 mousePosition;
+        public static Vector2 MousePosition => mousePosition;
+        #endregion
+
+        #region Private
         private const float MaxTapMoveDistance = 15.0f; //Pixels
         private const float MaxTapTime = 0.5f; //Seconds
 
-        private Vector2 mousePosition;
         private Vector2 previousMousePosition;
         private Vector2 tapStartPosition;
         private float tapStartTime;
 
         private bool isRightClickPressed = false;
         private bool isLeftClickPressed = false;
+
+        private Func<Vector2,Vector2,float> getDistance = (a,b) => Vector2.Distance(a,b);
+        #endregion
+
         #endregion
 
         #region Unity Methods
@@ -45,19 +65,23 @@ namespace MK.Transitioning.Core
             mouseInputActions.Enable();
 
             #region Mouse Position
-            //Get the mouse position
             mouseInputActions.MousePosition.performed += ctx => mousePosition = ctx.ReadValue<Vector2>();
             #endregion
 
             #region Scroll
-            //Get the scroll click event
             mouseInputActions.Scroll.performed += ctx => OnScroll?.Invoke(ctx.ReadValue<Vector2>());
             #endregion
 
             #region Right Click
-            //Get the right click event
-            mouseInputActions.RightClick.started += _ => isRightClickPressed = true;
-            mouseInputActions.RightClick.canceled += _ => isRightClickPressed = false;
+            mouseInputActions.RightClick.started += _ =>
+            {
+                isRightClickPressed = true;
+            };
+            mouseInputActions.RightClick.canceled += _ =>
+            {
+                isRightClickPressed = false;
+                OnRightClickDragStopped?.Invoke();
+            };
             #endregion
 
             #region Left Click
@@ -72,6 +96,8 @@ namespace MK.Transitioning.Core
                 isLeftClickPressed = false;
                 if(IsTap(mousePosition))
                     OnLeftClick?.Invoke(mousePosition);
+                else
+                    OnLeftClickDragStopped?.Invoke();
             };
             #endregion
         }
@@ -81,16 +107,20 @@ namespace MK.Transitioning.Core
         private void OnDestroy() => mouseInputActions.Disable();
 
         private void FixedUpdate()
-        {   
-            //Check right click drag
-            if(isRightClickPressed)
-                OnRightClickDrag?.Invoke(mousePosition - previousMousePosition);
-            //Check left click drag
-            if(isLeftClickPressed)
-                OnLeftClickDrag?.Invoke(mousePosition - previousMousePosition);
-            //Check if the mouse position has changed
-            if(Vector2.Distance(mousePosition,previousMousePosition) != 0)
+        {
+            //Send the mouse position
+            if(previousMousePosition != mousePosition)
                 OnMousePositionChanged?.Invoke(mousePosition);
+            //Check right click drag
+            if (isRightClickPressed)
+                OnRightClickDragStarted?.Invoke(mousePosition - previousMousePosition);
+            //Check left click drag
+            if (isLeftClickPressed)
+            {
+                if(getDistance(mousePosition, tapStartPosition) <= MaxTapMoveDistance)
+                    return;
+                OnLeftClickDragStarted?.Invoke(mousePosition - previousMousePosition);
+            }
             //Update the previous mouse position
             previousMousePosition = mousePosition;
         }
@@ -98,8 +128,8 @@ namespace MK.Transitioning.Core
 
         #region Private Methods
         /// <summary>
-        /// Compares the <paramref name="screenPosition"/> of the touch with the initial position of the touch.
-        /// Compares the time of the touch with the initial time of the touch.
+        /// Compares the <paramref name="screenPosition"/> of the mouse posiiton with the initial position of the click.
+        /// Compares the time of the click with the initial time of the click.
         /// </summary>
         /// <param name="touchId"></param>
         /// <returns>True if the touch is a tap.</returns>

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MK.Transitioning.Interfaces;
 
 namespace MK.Transitioning.Components
 {
@@ -20,7 +21,7 @@ namespace MK.Transitioning.Components
         #endregion
 
         #region Public Methods
-        public void Rotate(Vector2 mouseDelta) => transform.Rotate(mouseDelta.y * RotationSpeed, -mouseDelta.x * RotationSpeed, 0, Space.World);
+        public void Rotate(Vector2 mouseDelta) => transform.Rotate(mouseDelta.y * _rotationSpeed * Time.deltaTime, -mouseDelta.x * _rotationSpeed * Time.deltaTime, 0, Space.World);
         #endregion
     }
 }

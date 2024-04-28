@@ -12,13 +12,6 @@ namespace MK.Transitioning.Core
         //Only one instance of SelectionManager is allowed.
         public static SelectionManager Instance { get; private set; }
 
-        //Is the SelectionManager enabled?
-        private bool isEnabled;
-        public bool IsEnabled
-        {
-            get => isEnabled;
-        }
-
         private Camera mainCamera;
         private RaycastHit[] raycastHits = new RaycastHit[1];
         #endregion
@@ -36,14 +29,21 @@ namespace MK.Transitioning.Core
 
         private void OnEnable()
         {
+            if (InputManager.Instance == null)
+            {
+                Debug.LogError("InputManager is missing.");
+                Destroy(gameObject);
+            }
+
             InputManager.OnLeftClick += OnClick;
         }
 
-        private void Start() => EnableBehaviour(true);
-        #endregion
-
-        #region Public Methods
-        public void EnableBehaviour(bool enable) => isEnabled = enable;
+        private void Start()
+        {
+            enabled = (InputManager.Instance != null);
+            if (!enabled)
+                Debug.LogError("InputManager is missing.");
+        }
         #endregion
 
         #region Private Methods
