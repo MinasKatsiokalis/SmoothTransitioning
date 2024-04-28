@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace MK.Transitioning
 {
-    public interface ISelectable
-    {   
+    public interface IRotatable
+    {
         Transform Transform { get; }
-        bool IsSelected { get; set; }
-        void OnSelected();
+        float RotationSpeed { get; set; }
+        void Rotate(Vector2 delta);
     }
 }

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Core
 {
     public static class EventSystem
     {
@@ -24,7 +24,6 @@ namespace MK.Transitioning
         public static class SelectionEvents
         {
             public static Action<GameObject> OnObjectSelected;
-            public static Action<GameObject[]> OnObjectsSelected;
         }
     }
 }

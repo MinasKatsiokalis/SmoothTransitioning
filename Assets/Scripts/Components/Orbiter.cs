@@ -2,7 +2,7 @@ using MK.Transitioning.Interfaces;
 using System.Collections;
 using UnityEngine;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Components
 {
     public class Orbiter : MonoBehaviour, IOrbitable
     {

@@ -40,29 +40,5 @@ namespace MK.Transitioning.Utils
                 await Task.Yield();
             }
         }
-
-        /// <summary>
-        /// Changes the surface type of a material.
-        /// </summary>
-        /// <param name="material"></param>
-        /// <param name="surfaceType"></param>
-        public static void ChnageSurfaceType(Material material, SurfaceType surfaceType)
-        {
-            switch (surfaceType)
-            {
-                case SurfaceType.Opaque:
-                    material.SetFloat("_Surface", 0);
-                    break;
-                case SurfaceType.Transparent:
-                    material.SetFloat("_Surface", 1);
-                    break;
-            }
-        }
-    }
-
-    public enum SurfaceType
-    {
-        Opaque = 0,
-        Transparent = 1
     }
 }

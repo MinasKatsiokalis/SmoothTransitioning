@@ -1,8 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using MK.Transitioning.Core;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Components
 {
     /// <summary>
     /// Scene manager for Scene3.
@@ -10,22 +10,26 @@ namespace MK.Transitioning
     /// </summary>
     public class SceneThreeManager : AbstractSceneManager
     {
+        [SerializeField]
+        private Button restartButton;
+
         #region Unity Methods
         private new void OnEnable()
         {   
-            EventSystem.SceneEvents.OnObjectsTransfered += TransferObjects;
+            EventSystem.SceneEvents.OnObjectsTransfered += ObtainTransferedObjects;
             base.OnEnable();
+        }
+        void Start()
+        {
+            restartButton.onClick.AddListener(() => EventSystem.TimelineEvents.OnSceneOneSelected());
+            FadeInObjects();
         }
 
         private new void OnDisable()
         {
-            EventSystem.SceneEvents.OnObjectsTransfered -= TransferObjects;
+            SceneTransition();
+            EventSystem.SceneEvents.OnObjectsTransfered -= ObtainTransferedObjects;
             base.OnDisable();
-        }
-
-        void Start()
-        {
-            FadeInObjects();
         }
         #endregion
 
@@ -34,7 +38,7 @@ namespace MK.Transitioning
         /// Transfers the objects to the <see cref="SceneThreeManager.ObjectsContainer"/>.
         /// </summary>
         /// <param name="objects"></param>
-        private void TransferObjects(GameObject[] objects)
+        private void ObtainTransferedObjects(GameObject[] objects)
         {
             Debug.Log("Objects Transfered");
             foreach (var obj in objects)

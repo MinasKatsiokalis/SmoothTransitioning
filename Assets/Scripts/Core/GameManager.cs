@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Core
 {
     public class GameManager : MonoBehaviour
     {

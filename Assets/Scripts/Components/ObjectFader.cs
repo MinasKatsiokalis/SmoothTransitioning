@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using MK.Transitioning.Interfaces;
 using System;
 using MK.Transitioning.Utils;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Components
 {
     public class ObjectFader : MonoBehaviour, IFadable
     {
@@ -36,7 +38,6 @@ namespace MK.Transitioning
 
         //Materials to fade
         private Material[] materials = null;
-
         //Task management
         private Task fadeTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
@@ -47,18 +48,12 @@ namespace MK.Transitioning
         {
             materials = GetComponentsInChildren<Renderer>().Select(renderer => renderer.material).ToArray();
         }
+
         private void OnDisable()
         {
             if (fadeTask != null && !fadeTask.IsCompleted)
-            {
-                cancellationTokenSource.Cancel();
-                cancellationTokenSource.Dispose();
-            }
-        }
-        private void OnDestroy()
-        {
-            if (fadeTask != null && !fadeTask.IsCompleted)
-            {
+            {       
+                Debug.Log("Disable");
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource.Dispose();
             }
@@ -103,10 +98,9 @@ namespace MK.Transitioning
                 cancellationTokenSource.Cancel();
                 cancellationTokenSource.Dispose();
             }
-
+            
             // Create a new CancellationTokenSource
             cancellationTokenSource = new CancellationTokenSource();
-
             try
             {
                 await (fadeTask = FadeTask(targetAlpha, cancellationTokenSource.Token));
@@ -114,7 +108,15 @@ namespace MK.Transitioning
             catch (TaskCanceledException)
             {
                 Debug.Log("Fade cancelled");
+                if(materials == null || cancellationTokenSource.IsCancellationRequested)
+                    return;
+
                 SetAlpha(targetAlpha);
+                cancellationTokenSource.Dispose();
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"An Exception occured: {e.Message}");
             }
         }
 
@@ -130,7 +132,6 @@ namespace MK.Transitioning
             if (materials == null || materials.Length == 0)
                 return;
 
-            Action<Material, SurfaceType> changeSurfaceType = (material, surfaceType) => Utilities.ChnageSurfaceType(material, surfaceType);
             Color color = materials[0].color;
             float alphaDiff = Mathf.Abs(color.a - targetAlpha);
 
@@ -141,13 +142,7 @@ namespace MK.Transitioning
 
                 float newAlpha = Mathf.MoveTowards(materials[0].color.a, targetAlpha, Time.deltaTime / Duration);
                 foreach (var material in materials)
-                {
                     material.color = new Color(color.r, color.g, color.b, newAlpha);
-                    if (newAlpha >= 0.95f)
-                        changeSurfaceType(material, SurfaceType.Opaque);
-                    else
-                        changeSurfaceType(material, SurfaceType.Transparent);
-                }
                 alphaDiff = Mathf.Abs(materials[0].color.a - targetAlpha);
                 
                 await Task.Yield();
@@ -162,7 +157,6 @@ namespace MK.Transitioning
         {
             foreach (var material in materials)
                 material.color = new Color(material.color.r, material.color.g, material.color.b, alpha);
-            cancellationTokenSource.Dispose();
         }
         #endregion
     }

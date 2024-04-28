@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using UnityEngine.UI;
 using MK.Transitioning.Interfaces;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Components
 {
     /// <summary>
     /// Behaviour class that fades in and out a text component.

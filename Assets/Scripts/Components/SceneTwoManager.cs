@@ -1,11 +1,10 @@
-using MK.Transitioning.Interfaces;
 using MK.Transitioning.Utils;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using MK.Transitioning.Core;
 
-namespace MK.Transitioning
+
+namespace MK.Transitioning.Components
 {
     /// <summary>
     /// Scene manager for Scene2.
@@ -56,23 +55,13 @@ namespace MK.Transitioning
         /// <param name="scene"></param>
         private void TransferObject(Scene scene)
         {
-            if (scene.buildIndex != 3)
+            if (scene.buildIndex != 3 || selectedObject == null)
                 return;
 
             selectedObject.transform.SetParent(null);
             SceneManager.MoveGameObjectToScene(selectedObject, scene);
-            Utilities.MoveToCenter(selectedObject.transform, 1.5f, 3.5f);
+            Utilities.MoveToCenter(selectedObject.transform, 2f, 3.5f);
             EventSystem.SceneEvents.OnObjectsTransfered?.Invoke(new GameObject[] { selectedObject });
-        }
-
-        /// <summary>
-        /// Executes when the scene is about to transition.
-        /// </summary>
-        private async void SceneTransition()
-        {   
-            DontDestroyOnLoad(ObjectsContainer);
-            await FadeOutObjects();
-            Destroy(ObjectsContainer);
         }
         #endregion
     }

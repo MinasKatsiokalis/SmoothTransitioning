@@ -3,8 +3,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using MK.Transitioning.Interfaces;
+using MK.Transitioning.Core;
 
-namespace MK.Transitioning
+namespace MK.Transitioning.Components
 {
     public abstract class AbstractSceneManager : MonoBehaviour
     {
@@ -24,8 +25,8 @@ namespace MK.Transitioning
 
         public void OnDisable()
         {
-            Debug.Log($"{Scene.name} Unloaded");
             EventSystem.SceneEvents.OnSceneUnloaded?.Invoke(Scene);
+            Debug.Log($"{Scene.name} Unloaded");
         }
 
         /// <summary>
@@ -54,6 +55,20 @@ namespace MK.Transitioning
             foreach (var fadable in fadables)
                 tasks.Add(fadable.FadeOutAwaitable());
             await Task.WhenAll(tasks);
+        }
+
+
+        /// <summary>
+        /// Executes when the scene is about to transition.
+        /// </summary>
+        public async void SceneTransition()
+        {
+            if (ObjectsContainer == null)
+                return;
+
+            DontDestroyOnLoad(ObjectsContainer);
+            await FadeOutObjects();
+            Destroy(ObjectsContainer);
         }
     }
 }
