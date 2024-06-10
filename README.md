@@ -1,5 +1,6 @@
 # Smooth Transitioning
-An implementation of a smooth transitioning scenario between scenes
+An implementation of a smooth transitioning scenario between Unity scenes.
+Each number represents a new scene with its elements.
 > [!NOTE]
 > Project Documentation: [here](https://minaskatsiokalis.github.io/smooth-transitioning/documentation/html/)
 
